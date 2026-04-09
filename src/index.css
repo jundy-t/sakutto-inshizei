@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* デフォルト = ダークテーマ */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-card: #1a1a1a;
+  --color-card-hover: #242424;
+  --color-border: #2a2a2a;
+  --color-text: #f5f5f5;
+  --color-text-muted: #a3a3a3;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
+  --color-accent: #10b981;
+  --color-accent-light: #34d399;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --font-sans: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+}
+
+/* ライトテーマ用変数 (data-theme="light" 時にオーバーライド) */
+/* 純白を避けた暖色ベージュ系。長時間見ても眩しくない */
+:root[data-theme="light"] {
+  --color-bg: #e8e0cc;
+  --color-card: #f5f0e1;
+  --color-card-hover: #ede4ce;
+  --color-border: #cabe9e;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-primary: #1e40af;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1e3a8a;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 日本語テキストの孤児文字・悪い折返し防止
+   - word-break: keep-all で単語途中の折返しを禁止（句読点で折る）
+   - overflow-wrap: anywhere で極端なケースは強制折返しにフォールバック
+   日本語 Web サイトでは定番の組合せ。スマホ (375px) で単一文字の孤児が
+   発生するのを一括防止する。 */
+p {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 印刷 / PDF 保存用スタイル
+   PrintButton で window.print() を呼んだとき、ヘッダー・フッター・ボタン類を
+   非表示にして、本文だけが綺麗に出力されるようにする */
+@media print {
+  /* .no-print が付いた要素は印刷時に非表示
+     ShareButton / PrintButton 自身もこのクラスを持つ */
+  .no-print,
+  header,
+  footer,
+  button {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  /* 背景色や枠線も明示的に印刷する */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* A4 余白 */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+}

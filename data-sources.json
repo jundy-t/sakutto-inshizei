@@ -1,0 +1,4 @@
+{
+  "$comment": "このプロジェクトが _shared/data/sources から取り込む共通データソースのkey一覧。prebuildで src/data/sources/<key>/ にコピーされる。",
+  "sources": ["nta-inshizei"]
+}
