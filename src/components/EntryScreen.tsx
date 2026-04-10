@@ -13,14 +13,14 @@ export function EntryScreen({ onGoTable, onGoWizard }: EntryScreenProps) {
   return (
     <div className="space-y-6">
       {/* 電子契約の案内 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200">
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-text">
         <div className="font-bold mb-1">💡 電子契約なら印紙税は不要です</div>
-        <p className="text-xs leading-relaxed">
+        <p className="text-xs text-text-muted leading-relaxed">
           メール・クラウド署名（クラウドサイン、DocuSign 等）で作成した文書には印紙税はかかりません。
-          以下は<strong>紙の文書</strong>の印紙税を判定するツールです。
+          以下は<strong className="text-text">紙の文書</strong>の印紙税を判定するツールです。
         </p>
-        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-          出典: <a href="https://www.nta.go.jp/law/shitsugi/inshi/02/10.htm" target="_blank" rel="noopener noreferrer" className="underline">国税庁 質疑応答事例</a>
+        <p className="text-xs text-text-muted mt-1">
+          出典: <a href="https://www.nta.go.jp/law/shitsugi/inshi/02/10.htm" target="_blank" rel="noopener noreferrer" className="underline text-primary-light">国税庁 質疑応答事例</a>
         </p>
       </div>
 

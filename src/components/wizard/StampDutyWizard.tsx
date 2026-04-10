@@ -450,10 +450,25 @@ interface AmountStepProps {
   onBack: () => void;
 }
 
+/** 数字文字列を3桁カンマ区切りにフォーマット */
+function formatWithCommas(value: string): string {
+  const digits = value.replace(/[^\d]/g, '');
+  if (!digits) return '';
+  return Number(digits).toLocaleString();
+}
+
 function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
   const [amountStr, setAmountStr] = useState('');
   const [taxNotation, setTaxNotation] = useState<TaxNotation>('no_tax');
   const [taxAmountStr, setTaxAmountStr] = useState('');
+
+  const handleAmountChange = (value: string) => {
+    setAmountStr(formatWithCommas(value));
+  };
+
+  const handleTaxAmountChange = (value: string) => {
+    setTaxAmountStr(formatWithCommas(value));
+  };
 
   const handleSubmit = () => {
     const amount = amountStr ? parseInt(amountStr.replace(/,/g, ''), 10) : null;
@@ -480,8 +495,8 @@ function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
             type="text"
             inputMode="numeric"
             value={amountStr}
-            onChange={e => setAmountStr(e.target.value.replace(/[^\d,]/g, ''))}
-            placeholder="例: 30000000"
+            onChange={e => handleAmountChange(e.target.value)}
+            placeholder="例: 30,000,000"
             className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
@@ -530,8 +545,8 @@ function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
               type="text"
               inputMode="numeric"
               value={taxAmountStr}
-              onChange={e => setTaxAmountStr(e.target.value.replace(/[^\d,]/g, ''))}
-              placeholder="例: 3000000"
+              onChange={e => handleTaxAmountChange(e.target.value)}
+              placeholder="例: 3,000,000"
               className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-text-muted mt-1">

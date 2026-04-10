@@ -88,6 +88,7 @@ export function TaxTableScreen({ onSelect, onBack }: TaxTableScreenProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="例: 2号、請負、領収書、手形"
+              aria-label="号数や文書名で検索"
               className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -142,8 +143,11 @@ export function TaxTableScreen({ onSelect, onBack }: TaxTableScreenProps) {
                   type="text"
                   inputMode="numeric"
                   value={amountStr}
-                  onChange={e => setAmountStr(e.target.value.replace(/[^\d,]/g, ''))}
-                  placeholder="例: 30000000"
+                  onChange={e => {
+                    const digits = e.target.value.replace(/[^\d]/g, '');
+                    setAmountStr(digits ? Number(digits).toLocaleString() : '');
+                  }}
+                  placeholder="例: 30,000,000"
                   className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
