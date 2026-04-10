@@ -4,7 +4,7 @@ declare global {
   }
 }
 
-export const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+export const GA_MEASUREMENT_ID = 'G-3TFE7K896V';
 
 function trackEvent(action: string, params?: Record<string, string | number>) {
   if (typeof window.gtag === 'function') {
