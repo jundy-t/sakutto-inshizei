@@ -1,25 +1,118 @@
-import { Header } from './components/layout/Header'
-import { Footer } from './components/layout/Footer'
-import { FeedbackSection } from './components/shared/FeedbackSection'
+import { useCallback, useState } from 'react';
+import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
+import { FeedbackSection } from './components/shared/FeedbackSection';
+import { EntryScreen } from './components/EntryScreen';
+import { TaxTableScreen } from './components/TaxTableScreen';
+import { StampDutyWizard } from './components/wizard/StampDutyWizard';
+import { ResultScreen } from './components/ResultScreen';
+import { classifyDocument } from './core/classifyDocument';
+import { calculateTax } from './core/calculateTax';
+import type { WizardAnswers, ClassificationResult, TaxResult } from './core/types';
 
-function App() {
+type Screen = 'entry' | 'table' | 'wizard' | 'result';
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>('entry');
+  const [classification, setClassification] = useState<ClassificationResult | null>(null);
+  const [taxResult, setTaxResult] = useState<TaxResult | null>(null);
+
+  const goHome = useCallback(() => {
+    setScreen('entry');
+    setClassification(null);
+    setTaxResult(null);
+    window.scrollTo(0, 0);
+  }, []);
+
+  const goTable = useCallback(() => {
+    setScreen('table');
+    window.scrollTo(0, 0);
+  }, []);
+
+  const goWizard = useCallback(() => {
+    setScreen('wizard');
+    setClassification(null);
+    setTaxResult(null);
+    window.scrollTo(0, 0);
+  }, []);
+
+  const handleWizardComplete = useCallback((answers: WizardAnswers) => {
+    const cls = classifyDocument(answers);
+    setClassification(cls);
+
+    if (cls.type === 'taxable') {
+      const result = calculateTax(cls.classNumber, answers.amount ?? null, {
+        taxNotation: answers.taxNotation ?? 'no_tax',
+        consumptionTaxAmount: answers.consumptionTaxAmount,
+        isReduction: cls.isReduction,
+        isSpecialBill: answers.isSpecialBill,
+      });
+      setTaxResult(result);
+    } else if (cls.type === 'fixed') {
+      setTaxResult({
+        taxAmount: cls.fixedAmount,
+        classNumber: cls.classNumber,
+        classLabel: cls.label,
+        isReduction: false,
+        reductionSaving: null,
+        legalBasis: [`第${cls.classNumber}号文書: 一律${cls.fixedAmount.toLocaleString()}円`],
+        warnings: [
+          '印紙を貼り付けなかった場合、本来の印紙税額の3倍の過怠税が課されます（自己申告の場合は1.1倍）',
+        ],
+        consumptionTaxNote: null,
+      });
+    } else {
+      setTaxResult(null);
+    }
+
+    setScreen('result');
+    window.scrollTo(0, 0);
+  }, []);
+
+  /** 早見表から号を選んで金額入力後に呼ばれる */
+  const handleTableSelect = useCallback((classNumber: string, amount: number | null, isReduction: boolean) => {
+    const result = calculateTax(classNumber, amount, {
+      taxNotation: 'no_tax',
+      isReduction,
+    });
+    setClassification({ type: 'taxable', classNumber, label: result.classLabel, isReduction });
+    setTaxResult(result);
+    setScreen('result');
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-bg text-text">
-      <Header />
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-6 space-y-6">
-        <section className="bg-card rounded-xl border border-border p-6">
-          <h2 className="text-lg font-bold text-primary-light mb-2">
-            サクッと印紙税 へようこそ
-          </h2>
-          <p className="text-sm text-text-muted">
-            ここにメインコンテンツを実装してください。<code className="text-xs bg-card-hover px-1 py-0.5 rounded">src/core/</code> にビジネスロジック、<code className="text-xs bg-card-hover px-1 py-0.5 rounded">src/data/</code> にマスターデータを配置します。
-          </p>
-        </section>
-        <FeedbackSection />
+    <div className="min-h-screen flex flex-col bg-bg">
+      <Header onHomeClick={goHome} />
+
+      <main className="flex-1">
+        <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+          {screen === 'entry' && (
+            <EntryScreen onGoTable={goTable} onGoWizard={goWizard} />
+          )}
+
+          {screen === 'table' && (
+            <TaxTableScreen onSelect={handleTableSelect} onBack={goHome} />
+          )}
+
+          {screen === 'wizard' && (
+            <StampDutyWizard onComplete={handleWizardComplete} onBack={goHome} />
+          )}
+
+          {screen === 'result' && (
+            <ResultScreen
+              classification={classification}
+              taxResult={taxResult}
+              onBack={goHome}
+              onRetry={goWizard}
+            />
+          )}
+
+          {screen === 'entry' && <FeedbackSection />}
+        </div>
       </main>
+
       <Footer />
     </div>
-  )
+  );
 }
-
-export default App

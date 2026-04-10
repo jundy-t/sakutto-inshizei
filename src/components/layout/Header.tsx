@@ -1,11 +1,18 @@
 import { ThemeToggle } from '../shared/ThemeToggle';
 
-export function Header() {
+interface HeaderProps {
+  onHomeClick?: () => void;
+}
+
+export function Header({ onHomeClick }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border">
       <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold text-primary-light tracking-tight truncate">
+          <h1
+            className="text-xl font-bold text-primary-light tracking-tight truncate cursor-pointer"
+            onClick={onHomeClick}
+          >
             サクッと印紙税
           </h1>
           <p className="text-sm text-text-muted mt-0.5 truncate">
