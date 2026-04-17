@@ -11,7 +11,7 @@ import {
   STAMP_DUTY_META,
   type TaxBracket,
 } from '../data/sources/nta-inshizei/data';
-import type { TaxNotation, TaxResult } from './types';
+import type { LegalBasisEntry, TaxNotation, TaxResult } from './types';
 
 interface CalculateOptions {
   taxNotation: TaxNotation;
@@ -38,7 +38,7 @@ export function calculateTax(
   }
 
   const warnings: string[] = [];
-  const legalBasis: string[] = [];
+  const legalBasis: LegalBasisEntry[] = [];
   let consumptionTaxNote: string | null = null;
 
   // ──────────────────────────────────────
@@ -48,7 +48,7 @@ export function calculateTax(
   if (amount !== null && options.taxNotation === 'tax_separated' && options.consumptionTaxAmount) {
     amount = amount - options.consumptionTaxAmount;
     consumptionTaxNote = `消費税${options.consumptionTaxAmount.toLocaleString()}円を除いた${amount.toLocaleString()}円で判定しました`;
-    legalBasis.push('消費税額等が区分記載されている場合は、消費税額等を除いた金額が記載金額（印紙税法基本通達）');
+    legalBasis.push({ law: '印紙税法基本通達', description: '消費税額等が区分記載されている場合は、消費税額等を除いた金額が記載金額' });
   }
 
   // ──────────────────────────────────────
@@ -61,7 +61,7 @@ export function calculateTax(
       classLabel: cls.label,
       isReduction: false,
       reductionSaving: null,
-      legalBasis: [`第${formatClassNumber(classNumber)}号文書: 一律${cls.fixedAmount.toLocaleString()}円`],
+      legalBasis: [{ law: '印紙税法 別表第一', description: `第${formatClassNumber(classNumber)}号文書: 一律${cls.fixedAmount.toLocaleString()}円` }],
       warnings: buildWarnings(warnings),
       consumptionTaxNote,
     };
@@ -74,7 +74,7 @@ export function calculateTax(
       classLabel: cls.label,
       isReduction: false,
       reductionSaving: null,
-      legalBasis: [`第${formatClassNumber(classNumber)}号文書: 1年につき${cls.annualAmount.toLocaleString()}円`],
+      legalBasis: [{ law: '印紙税法 別表第一', description: `第${formatClassNumber(classNumber)}号文書: 1年につき${cls.annualAmount.toLocaleString()}円` }],
       warnings: buildWarnings(warnings),
       consumptionTaxNote,
     };
@@ -92,9 +92,12 @@ export function calculateTax(
       isReduction: false,
       reductionSaving: null,
       legalBasis: [
-        noAmountTax !== null
-          ? `記載金額のない第${formatClassNumber(classNumber)}号文書: ${noAmountTax.toLocaleString()}円`
-          : `記載金額のない第${formatClassNumber(classNumber)}号文書: 非課税`,
+        {
+          law: '印紙税法 別表第一',
+          description: noAmountTax !== null
+            ? `記載金額のない第${formatClassNumber(classNumber)}号文書: ${noAmountTax.toLocaleString()}円`
+            : `記載金額のない第${formatClassNumber(classNumber)}号文書: 非課税`,
+        },
       ],
       warnings: buildWarnings(warnings),
       consumptionTaxNote,
@@ -112,7 +115,7 @@ export function calculateTax(
       classLabel: cls.label,
       isReduction: false,
       reductionSaving: null,
-      legalBasis: [`第3号文書（特例手形）: ${taxAmount === 0 ? '非課税（10万円未満）' : '一律200円'}`],
+      legalBasis: [{ law: '印紙税法 別表第一', description: `第3号文書（特例手形）: ${taxAmount === 0 ? '非課税（10万円未満）' : '一律200円'}` }],
       warnings: buildWarnings(warnings),
       consumptionTaxNote,
     };
@@ -139,17 +142,21 @@ export function calculateTax(
       taxAmount = reductionTax;
       isReduction = true;
       reductionSaving = normalTax - reductionTax;
-      legalBasis.push(
-        `軽減措置適用: ${normalTax.toLocaleString()}円 → ${reductionTax.toLocaleString()}円（${reductionSaving.toLocaleString()}円の節約）`,
-      );
-      legalBasis.push(`軽減措置期限: ${STAMP_DUTY_META.reductionExpiry}まで`);
+      legalBasis.push({
+        law: '租税特別措置法第91条の4',
+        description: `軽減措置適用: ${normalTax.toLocaleString()}円 → ${reductionTax.toLocaleString()}円（${reductionSaving.toLocaleString()}円の節約）`,
+      });
+      legalBasis.push({
+        law: '租税特別措置法第91条の4',
+        description: `軽減措置期限: ${STAMP_DUTY_META.reductionExpiry}まで`,
+      });
     }
   }
 
   if (taxAmount === 0) {
-    legalBasis.push(`第${formatClassNumber(classNumber)}号文書: 非課税（${formatAmount(amount)}）`);
+    legalBasis.push({ law: '印紙税法 別表第一', description: `第${formatClassNumber(classNumber)}号文書: 非課税（${formatAmount(amount)}）` });
   } else {
-    legalBasis.push(`第${formatClassNumber(classNumber)}号文書: ${taxAmount.toLocaleString()}円（${formatAmount(amount)}）`);
+    legalBasis.push({ law: '印紙税法 別表第一', description: `第${formatClassNumber(classNumber)}号文書: ${taxAmount.toLocaleString()}円（${formatAmount(amount)}）` });
   }
 
   return {

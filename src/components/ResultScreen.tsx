@@ -13,6 +13,7 @@ import { PrintButton } from './shared/PrintButton';
 import { calculateTax } from '../core/calculateTax';
 import { applyRule3 } from '../core/applyRule3';
 import { DOCUMENT_CLASSES } from '../data/sources/nta-inshizei/data';
+import { LAW_URLS } from '../data/sources/nta-inshizei/lawUrls';
 import type { ClassificationResult, TaxResult, WizardAnswers, HybridOption } from '../core/types';
 
 interface ResultScreenProps {
@@ -125,12 +126,27 @@ export function ResultScreen({ classification, taxResult, wizardAnswers, onBack,
           {/* 根拠条文 */}
           <section className="bg-card rounded-xl border border-border p-4">
             <h3 className="text-sm font-bold text-text mb-2">根拠</h3>
-            <ul className="space-y-1">
-              {taxResult.legalBasis.map((basis, i) => (
-                <li key={i} className="text-xs text-text-muted">
-                  {basis}
-                </li>
-              ))}
+            <ul className="space-y-2">
+              {taxResult.legalBasis.map((basis, i) => {
+                const url = LAW_URLS[basis.law];
+                return (
+                  <li key={i} className="text-xs">
+                    {url ? (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary-light hover:underline"
+                      >
+                        {basis.law}
+                      </a>
+                    ) : (
+                      <span className="font-medium text-primary-dark">{basis.law}</span>
+                    )}
+                    <p className="text-text-muted mt-0.5">{basis.description}</p>
+                  </li>
+                );
+              })}
             </ul>
           </section>
 

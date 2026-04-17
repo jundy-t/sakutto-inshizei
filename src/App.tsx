@@ -69,7 +69,7 @@ export default function App() {
         classLabel: cls.label,
         isReduction: false,
         reductionSaving: null,
-        legalBasis: [`第${cls.classNumber}号文書: 一律${cls.fixedAmount.toLocaleString()}円`],
+        legalBasis: [{ law: '印紙税法 別表第一', description: `第${cls.classNumber}号文書: 一律${cls.fixedAmount.toLocaleString()}円` }],
         warnings: [
           '印紙を貼り付けなかった場合、本来の印紙税額の3倍の過怠税が課されます（自己申告の場合は1.1倍）',
         ],

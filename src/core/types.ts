@@ -129,6 +129,18 @@ export interface FixedResult {
 export type ClassificationResult = TaxableResult | NonTaxableResult | FixedResult;
 
 // ============================================================
+// 法令根拠（ADR-0004 A方式: 経費判定と同じ構造）
+// ============================================================
+
+/** 根拠（法令名 + 補足説明） */
+export interface LegalBasisEntry {
+  /** 法令名（例: "印紙税法 別表第一"） — lawUrls.ts のキーと一致させる */
+  law: string;
+  /** 補足説明（例: "第1号の1号文書: 620,000円"） */
+  description: string;
+}
+
+// ============================================================
 // 税額計算の結果
 // ============================================================
 
@@ -144,7 +156,7 @@ export interface TaxResult {
   /** 軽減で節約した額（null = 軽減なし） */
   reductionSaving: number | null;
   /** 根拠条文リスト */
-  legalBasis: string[];
+  legalBasis: LegalBasisEntry[];
   /** 注意事項（過怠税、仮契約書は別途課税等） */
   warnings: string[];
   /** 消費税の扱いに関する説明（null = 説明不要） */
