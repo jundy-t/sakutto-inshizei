@@ -27,14 +27,14 @@ export function StepIndicator({ currentStep }: Props) {
                     ? 'bg-primary text-white'
                     : isCompleted
                     ? 'bg-accent text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    : 'bg-card-hover text-text-muted'
                 }`}
               >
                 {isCompleted ? '\u2713' : stepNum}
               </div>
               <span
                 className={`text-xs mt-1 ${
-                  isActive ? 'text-primary font-bold' : 'text-gray-500'
+                  isActive ? 'text-primary font-bold' : 'text-text-muted'
                 }`}
               >
                 {step.label}
@@ -43,7 +43,7 @@ export function StepIndicator({ currentStep }: Props) {
             {i < STEPS.length - 1 && (
               <div
                 className={`w-8 h-0.5 mx-1 mb-4 ${
-                  isCompleted ? 'bg-accent' : 'bg-gray-200'
+                  isCompleted ? 'bg-accent' : 'bg-border'
                 }`}
               />
             )}

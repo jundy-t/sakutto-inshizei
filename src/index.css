@@ -26,7 +26,7 @@
   --color-card-hover: #ede4ce;
   --color-border: #cabe9e;
   --color-text: #1e293b;
-  --color-text-muted: #64748b;
+  --color-text-muted: #475569;
   --color-primary: #1e40af;
   --color-primary-light: #3b82f6;
   --color-primary-dark: #1e3a8a;
@@ -39,6 +39,41 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* WCAG 2.4.7 Focus Visible — キーボード操作時のフォーカスリング保証
+   出典: knowledge/ui-design-knowledge/heuristics/wcag-essentials.md
+   個別コンポーネントの focus: クラスで上書き可能（@layer base は最低優先度） */
+@layer base {
+  button:focus-visible,
+  summary:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* ハードコード色をテーマ変数に追従させる（ダーク/ライト両対応）
+   個別コンポーネントの `bg-white` や `text-gray-800` 等を書き換えずに
+   テーマ切替に追従させるための共通上書き。全ツール統一。 */
+@layer utilities {
+  .bg-white { background-color: var(--color-card) !important; }
+  .bg-gray-50 { background-color: var(--color-bg) !important; }
+  .bg-gray-100 { background-color: var(--color-card-hover) !important; }
+  .text-gray-400,
+  .text-gray-500 { color: var(--color-text-muted) !important; }
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-800,
+  .text-gray-900,
+  .text-black { color: var(--color-text) !important; }
+  .border-gray-200,
+  .border-gray-300 { border-color: var(--color-border) !important; }
 }
 
 /* 日本語テキストの孤児文字・悪い折返し防止

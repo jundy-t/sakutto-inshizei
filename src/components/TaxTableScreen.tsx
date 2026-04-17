@@ -151,6 +151,13 @@ export function TaxTableScreen({ onSelect, onBack }: TaxTableScreenProps) {
                   className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-lg text-text focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+              <div className="text-xs text-text-muted bg-card-hover rounded-lg p-3 space-y-1">
+                <div className="font-medium text-text">💡 こんな場合は「ウィザードで判定」が便利です</div>
+                <ul className="space-y-0.5 ml-3">
+                  <li>・既存契約の金額を変更する覚書 → 印紙税が安くなることがあります</li>
+                  <li>・1つの書類に売買と工事請負など複数の内容が混在する場合</li>
+                </ul>
+              </div>
               <button
                 type="button"
                 onClick={handleSubmit}

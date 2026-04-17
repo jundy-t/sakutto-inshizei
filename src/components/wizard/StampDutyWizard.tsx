@@ -134,12 +134,18 @@ export function StampDutyWizard({ onComplete, onBack }: StampDutyWizardProps) {
   }, [answers, updateAnswers, onComplete]);
 
   // 金額入力の完了
-  const handleAmountSubmit = useCallback((amount: number | null, taxNotation: TaxNotation, consumptionTaxAmount?: number) => {
+  const handleAmountSubmit = useCallback((amount: number | null, taxNotation: TaxNotation, consumptionTaxAmount?: number, amendment?: AmendmentInfo) => {
     const finalAnswers: WizardAnswers = {
       ...answers as WizardAnswers,
       amount: amount ?? undefined,
       taxNotation,
       consumptionTaxAmount,
+      ...(amendment ? {
+        isAmendment: true,
+        priorIdentifiable: amendment.priorIdentifiable,
+        amendmentDirection: amendment.amendmentDirection,
+        amendmentAmount: amendment.amendmentAmount,
+      } : {}),
     };
     onComplete(finalAnswers);
   }, [answers, onComplete]);
@@ -443,10 +449,18 @@ function shouldShowConsumptionTax(answers: Partial<WizardAnswers>): boolean {
 
 // ─── 金額入力サブコンポーネント ───
 
+/** AmountStep から返す変更契約情報 */
+interface AmendmentInfo {
+  isAmendment: true;
+  priorIdentifiable: boolean;
+  amendmentDirection?: 'increase' | 'decrease';
+  amendmentAmount?: number;
+}
+
 interface AmountStepProps {
   /** 消費税の記載方法の質問を表示するか */
   showConsumptionTax: boolean;
-  onSubmit: (amount: number | null, taxNotation: TaxNotation, consumptionTaxAmount?: number) => void;
+  onSubmit: (amount: number | null, taxNotation: TaxNotation, consumptionTaxAmount?: number, amendment?: AmendmentInfo) => void;
   onBack: () => void;
 }
 
@@ -462,6 +476,12 @@ function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
   const [taxNotation, setTaxNotation] = useState<TaxNotation>('no_tax');
   const [taxAmountStr, setTaxAmountStr] = useState('');
 
+  // 変更契約書の状態
+  const [isAmendment, setIsAmendment] = useState(false);
+  const [priorIdentifiable, setPriorIdentifiable] = useState<boolean | null>(null);
+  const [amendDirection, setAmendDirection] = useState<'increase' | 'decrease' | null>(null);
+  const [amendAmountStr, setAmendAmountStr] = useState('');
+
   const handleAmountChange = (value: string) => {
     setAmountStr(formatWithCommas(value));
   };
@@ -473,7 +493,15 @@ function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
   const handleSubmit = () => {
     const amount = amountStr ? parseInt(amountStr.replace(/,/g, ''), 10) : null;
     const consumptionTaxAmount = taxAmountStr ? parseInt(taxAmountStr.replace(/,/g, ''), 10) : undefined;
-    onSubmit(amount, taxNotation, consumptionTaxAmount);
+    const amendment: AmendmentInfo | undefined = isAmendment ? {
+      isAmendment: true,
+      priorIdentifiable: priorIdentifiable === true,
+      amendmentDirection: priorIdentifiable === true ? (amendDirection ?? undefined) : undefined,
+      amendmentAmount: priorIdentifiable === true && amendDirection === 'increase' && amendAmountStr
+        ? parseInt(amendAmountStr.replace(/,/g, ''), 10)
+        : undefined,
+    } : undefined;
+    onSubmit(amount, taxNotation, consumptionTaxAmount, amendment);
   };
 
   return (
@@ -552,6 +580,130 @@ function AmountStep({ showConsumptionTax, onSubmit, onBack }: AmountStepProps) {
             <p className="text-xs text-text-muted mt-1">
               消費税額を除いた金額で印紙税を判定します
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* 変更契約書チェック（オプション） */}
+      <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isAmendment}
+            onChange={e => {
+              setIsAmendment(e.target.checked);
+              if (!e.target.checked) {
+                setPriorIdentifiable(null);
+                setAmendDirection(null);
+                setAmendAmountStr('');
+              }
+            }}
+          />
+          <div>
+            <div className="text-sm font-medium text-text">これは変更契約書です</div>
+            <div className="text-xs text-text-muted">金額変更の覚書・変更合意書など、既存契約の変更</div>
+          </div>
+        </label>
+
+        {isAmendment && (
+          <div className="mt-2 pl-6 space-y-3 border-l-2 border-border">
+            {/* 変更前の特定可否 */}
+            <div>
+              <p className="text-sm font-medium text-text mb-2">
+                元の契約書の番号や日付が、この変更書面に書かれていますか？
+              </p>
+              <p className="text-xs text-text-muted mb-2">
+                例:「○年○月○日付 契約書第○号の金額を変更する」等の記載。
+                「はい」の場合、増額分のみで印紙税を計算でき、税額が安くなることがあります。
+              </p>
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="priorIdentifiable"
+                    checked={priorIdentifiable === true}
+                    onChange={() => setPriorIdentifiable(true)}
+                  />
+                  <span className="text-sm text-text">はい（元の契約書の番号や日付が書かれている）</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="priorIdentifiable"
+                    checked={priorIdentifiable === false}
+                    onChange={() => { setPriorIdentifiable(false); setAmendDirection(null); setAmendAmountStr(''); }}
+                  />
+                  <span className="text-sm text-text">いいえ / わからない</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 変更前不明の場合のガイド */}
+            {priorIdentifiable === false && (
+              <div className="text-xs text-text-muted bg-card-hover rounded-lg p-3">
+                💡 上の金額欄に、この変更書面に書かれている金額を入力してください。元の契約書を特定する記載がないため、増額分のみでの計算（印紙税の減額）は適用されません。
+              </div>
+            )}
+
+            {/* 増額/減額の選択（変更前特定可能の場合） */}
+            {priorIdentifiable === true && (
+              <div>
+                <p className="text-sm font-medium text-text mb-2">金額はどう変わりましたか？</p>
+                <div className="space-y-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="amendDirection"
+                      checked={amendDirection === 'increase'}
+                      onChange={() => setAmendDirection('increase')}
+                    />
+                    <span className="text-sm text-text">増額した</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="amendDirection"
+                      checked={amendDirection === 'decrease'}
+                      onChange={() => { setAmendDirection('decrease'); setAmendAmountStr(''); }}
+                    />
+                    <span className="text-sm text-text">減額した</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* 増額分の金額入力 */}
+            {priorIdentifiable === true && amendDirection === 'increase' && (
+              <div>
+                <label className="block text-sm font-medium text-text mb-1">
+                  増額分の金額（円）
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={amendAmountStr}
+                  onChange={e => setAmendAmountStr(formatWithCommas(e.target.value))}
+                  placeholder="例: 2,000,000"
+                  className="w-full bg-bg border border-border rounded-lg px-4 py-3 text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p className="text-xs text-text-muted mt-1">
+                  💡 記載金額は増額分のみで計算されます（通則4 / No.7123）
+                </p>
+              </div>
+            )}
+
+            {/* 減額の案内 */}
+            {priorIdentifiable === true && amendDirection === 'decrease' && (
+              <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
+                <div className="text-sm font-bold text-accent-light">減額変更 → 記載金額なし</div>
+                <p className="text-xs text-text-muted mt-1">
+                  変更前の契約書が特定できる減額変更は、記載金額のない契約書として扱われます（印紙税200円）。上の金額欄の入力は不要です。
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  出典: 国税庁 No.7123
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

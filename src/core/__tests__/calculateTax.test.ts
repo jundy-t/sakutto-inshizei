@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { calculateTax } from '../calculateTax';
+import { calculateTax, adjustAmendmentAmount } from '../calculateTax';
 import { classifyDocument } from '../classifyDocument';
 import type { WizardAnswers } from '../types';
 
@@ -267,5 +267,91 @@ describe('文書分類', () => {
     const answers: WizardAnswers = { docCategory: 'basic_agreement', continuity: 'yes_under_3months_no_renewal' };
     const result = classifyDocument(answers);
     expect(result.type).toBe('non_taxable');
+  });
+});
+
+// ============================================================
+// F. 変更契約書の記載金額調整（通則4 / No.7123）
+// 出典: https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7123.htm
+// ============================================================
+
+describe('変更契約書の記載金額調整', () => {
+  // 変更前特定可能 + 増額
+  test('増額200万（前特定可）→ 記載金額は増額分200万のみ', () => {
+    const result = adjustAmendmentAmount(11_000_000, true, true, 'increase', 2_000_000);
+    expect(result).toBe(2_000_000);
+  });
+
+  test('増額分200万で第2号計算 → 400円（100万超〜200万以下）', () => {
+    const amount = adjustAmendmentAmount(11_000_000, true, true, 'increase', 2_000_000);
+    const result = calculateTax('2', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(400);
+  });
+
+  // 変更前特定可能 + 減額
+  test('減額（前特定可）→ 記載金額なし', () => {
+    const result = adjustAmendmentAmount(7_000_000, true, true, 'decrease');
+    expect(result).toBeNull();
+  });
+
+  test('減額で記載金額なし → 第2号 200円', () => {
+    const amount = adjustAmendmentAmount(7_000_000, true, true, 'decrease');
+    const result = calculateTax('2', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(200); // 記載金額なし = 200円
+  });
+
+  test('減額で記載金額なし → 第1号の1 200円', () => {
+    const amount = adjustAmendmentAmount(7_000_000, true, true, 'decrease');
+    const result = calculateTax('1-1', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(200);
+  });
+
+  // 変更前特定不可 → 通常通り
+  test('変更後110万（前特定不可）→ 110万をそのまま使用', () => {
+    const result = adjustAmendmentAmount(1_100_000, true, false);
+    expect(result).toBe(1_100_000);
+  });
+
+  test('変更後110万で第2号計算 → 400円（100万超〜200万以下）', () => {
+    const amount = adjustAmendmentAmount(1_100_000, true, false);
+    const result = calculateTax('2', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(400);
+  });
+
+  // 非変更契約 → 通常通り
+  test('通常の契約書（非変更）→ 金額をそのまま使用', () => {
+    const result = adjustAmendmentAmount(10_000_000);
+    expect(result).toBe(10_000_000);
+  });
+
+  test('isAmendment=false → 金額をそのまま使用', () => {
+    const result = adjustAmendmentAmount(10_000_000, false);
+    expect(result).toBe(10_000_000);
+  });
+
+  // 国税庁 No.7123 の具体例と照合
+  test('No.7123 例1: 当初90万→110万（20万増額、前特定可）→ 記載金額20万', () => {
+    const amount = adjustAmendmentAmount(1_100_000, true, true, 'increase', 200_000);
+    expect(amount).toBe(200_000);
+    const result = calculateTax('2', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(200); // 100万以下 = 200円
+  });
+
+  test('No.7123 例2: 当初90万→70万（20万減額、前特定可）→ 記載金額なし → 200円', () => {
+    const amount = adjustAmendmentAmount(700_000, true, true, 'decrease');
+    expect(amount).toBeNull();
+    const result = calculateTax('2', amount, { taxNotation: 'no_tax', isReduction: false });
+    expect(result.taxAmount).toBe(200);
+  });
+
+  test('No.7123 例3: 110万に変更（前特定不可）→ 記載金額110万', () => {
+    const amount = adjustAmendmentAmount(1_100_000, true, false);
+    expect(amount).toBe(1_100_000);
+  });
+
+  test('No.7123 例4: 70万に変更（前特定不可、減額）→ 記載金額70万', () => {
+    // 変更前特定不可の場合、減額でも入力金額がそのまま記載金額
+    const amount = adjustAmendmentAmount(700_000, true, false);
+    expect(amount).toBe(700_000);
   });
 });

@@ -2,12 +2,13 @@ import { useCallback, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { FeedbackSection } from './components/shared/FeedbackSection';
+import { SeoExpandableSections } from './components/sections/SeoExpandableSections';
 import { EntryScreen } from './components/EntryScreen';
 import { TaxTableScreen } from './components/TaxTableScreen';
 import { StampDutyWizard } from './components/wizard/StampDutyWizard';
 import { ResultScreen } from './components/ResultScreen';
 import { classifyDocument } from './core/classifyDocument';
-import { calculateTax } from './core/calculateTax';
+import { calculateTax, adjustAmendmentAmount } from './core/calculateTax';
 import type { WizardAnswers, ClassificationResult, TaxResult } from './core/types';
 
 type Screen = 'entry' | 'table' | 'wizard' | 'result';
@@ -16,11 +17,13 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('entry');
   const [classification, setClassification] = useState<ClassificationResult | null>(null);
   const [taxResult, setTaxResult] = useState<TaxResult | null>(null);
+  const [wizardAnswers, setWizardAnswers] = useState<WizardAnswers | null>(null);
 
   const goHome = useCallback(() => {
     setScreen('entry');
     setClassification(null);
     setTaxResult(null);
+    setWizardAnswers(null);
     window.scrollTo(0, 0);
   }, []);
 
@@ -33,15 +36,26 @@ export default function App() {
     setScreen('wizard');
     setClassification(null);
     setTaxResult(null);
+    setWizardAnswers(null);
     window.scrollTo(0, 0);
   }, []);
 
   const handleWizardComplete = useCallback((answers: WizardAnswers) => {
+    setWizardAnswers(answers);
     const cls = classifyDocument(answers);
     setClassification(cls);
 
+    // 変更契約書の記載金額調整（通則4 / No.7123）
+    const effectiveAmount = adjustAmendmentAmount(
+      answers.amount ?? null,
+      answers.isAmendment,
+      answers.priorIdentifiable,
+      answers.amendmentDirection,
+      answers.amendmentAmount,
+    );
+
     if (cls.type === 'taxable') {
-      const result = calculateTax(cls.classNumber, answers.amount ?? null, {
+      const result = calculateTax(cls.classNumber, effectiveAmount, {
         taxNotation: answers.taxNotation ?? 'no_tax',
         consumptionTaxAmount: answers.consumptionTaxAmount,
         isReduction: cls.isReduction,
@@ -75,7 +89,13 @@ export default function App() {
       taxNotation: 'no_tax',
       isReduction,
     });
-    setClassification({ type: 'taxable', classNumber, label: result.classLabel, isReduction });
+    const major = parseInt(classNumber.split('-')[0], 10);
+    const source = isReduction
+      ? 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7108.htm'
+      : major <= 4
+        ? 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7140.htm'
+        : 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7141.htm';
+    setClassification({ type: 'taxable', classNumber, label: result.classLabel, isReduction, source });
     setTaxResult(result);
     setScreen('result');
     window.scrollTo(0, 0);
@@ -103,12 +123,14 @@ export default function App() {
             <ResultScreen
               classification={classification}
               taxResult={taxResult}
+              wizardAnswers={wizardAnswers}
               onBack={goHome}
               onRetry={goWizard}
             />
           )}
 
           {screen === 'entry' && <FeedbackSection />}
+          {screen === 'entry' && <SeoExpandableSections />}
         </div>
       </main>
 

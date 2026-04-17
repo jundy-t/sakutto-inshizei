@@ -8,13 +8,24 @@
 import {
   DOCUMENT_CLASSES,
   NON_TAXABLE_DOCUMENTS,
+  HYBRID_RISK_CLASSES,
+  HYBRID_OPTIONS,
 } from '../data/sources/nta-inshizei/data';
 import type {
   WizardAnswers,
   ClassificationResult,
   DocCategory,
   RealEstateInvolvement,
+  HybridOption,
 } from './types';
+
+/** 号番号から出典URL（国税庁タックスアンサー）を返す */
+function sourceUrlForClass(classNumber: string): string {
+  const major = parseInt(classNumber.split('-')[0], 10);
+  return major <= 4
+    ? 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7140.htm'
+    : 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7141.htm';
+}
 
 /**
  * ウィザードの回答から文書を分類する。
@@ -74,12 +85,19 @@ export function classifyDocument(answers: WizardAnswers): ClassificationResult {
     // 第5号（合併・分割）か第6号（定款）かはここでは第5号を返す
     // UI側で「定款ですか？合併ですか？」の追加質問で分岐可能
     const cls = DOCUMENT_CLASSES.find(d => d.number === '5')!;
-    return { type: 'fixed', classNumber: '5', label: cls.label, fixedAmount: cls.fixedAmount! };
+    return { type: 'fixed', classNumber: '5', label: cls.label, fixedAmount: cls.fixedAmount!, source: sourceUrlForClass('5') };
   }
 
   if (docCategory === 'basic_agreement' && continuity === 'yes_over_3months') {
     const cls = DOCUMENT_CLASSES.find(d => d.number === '7')!;
-    return { type: 'fixed', classNumber: '7', label: cls.label, fixedAmount: cls.fixedAmount! };
+    return {
+      type: 'fixed',
+      classNumber: '7',
+      label: cls.label,
+      fixedAmount: cls.fixedAmount!,
+      source: sourceUrlForClass('7'),
+      hybridOptions: getHybridOptions('7'),
+    };
   }
 
   // ──────────────────────────────────────
@@ -92,7 +110,7 @@ export function classifyDocument(answers: WizardAnswers): ClassificationResult {
   if (!cls) {
     // フォールバック: 分類できない場合は「その他」として第1号の1を返す
     const fallback = DOCUMENT_CLASSES.find(d => d.number === '1-1')!;
-    return { type: 'taxable', classNumber: '1-1', label: fallback.label, isReduction: false };
+    return { type: 'taxable', classNumber: '1-1', label: fallback.label, isReduction: false, source: sourceUrlForClass('1-1') };
   }
 
   // 軽減措置の対象判定
@@ -103,7 +121,20 @@ export function classifyDocument(answers: WizardAnswers): ClassificationResult {
     classNumber,
     label: cls.label,
     isReduction,
+    source: isReduction
+      ? 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7108.htm'
+      : sourceUrlForClass(classNumber),
+    hybridOptions: getHybridOptions(classNumber),
   };
+}
+
+/**
+ * 号番号に対応するハイブリッド候補（通則3適用対象）を返す。
+ * HYBRID_RISK_CLASSES に含まれない号は undefined を返す。
+ */
+function getHybridOptions(classNumber: string): readonly HybridOption[] | undefined {
+  if (!HYBRID_RISK_CLASSES.includes(classNumber)) return undefined;
+  return HYBRID_OPTIONS[classNumber];
 }
 
 /**

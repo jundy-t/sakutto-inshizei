@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sakutto-inshizei.haraochi.jp/sitemap.xml

@@ -202,3 +202,23 @@ function buildWarnings(warnings: string[]): string[] {
     '仮契約書・予約契約書は本契約書とは別に独立して課税されます',
   ];
 }
+
+/**
+ * 変更契約書の記載金額を調整する（通則4 / 国税庁 No.7123）。
+ *
+ * - 変更前特定可 + 増額 → 増額分のみが記載金額
+ * - 変更前特定可 + 減額 → 記載金額なし（null）
+ * - 変更前特定不可 or 非変更 → 入力金額をそのまま使用
+ */
+export function adjustAmendmentAmount(
+  originalAmount: number | null,
+  isAmendment?: boolean,
+  priorIdentifiable?: boolean,
+  amendmentDirection?: 'increase' | 'decrease',
+  amendmentAmount?: number,
+): number | null {
+  if (!isAmendment || !priorIdentifiable) return originalAmount;
+  if (amendmentDirection === 'decrease') return null;
+  if (amendmentDirection === 'increase' && amendmentAmount != null) return amendmentAmount;
+  return originalAmount;
+}

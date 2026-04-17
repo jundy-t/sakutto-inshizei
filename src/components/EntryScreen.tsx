@@ -12,15 +12,29 @@ interface EntryScreenProps {
 export function EntryScreen({ onGoTable, onGoWizard }: EntryScreenProps) {
   return (
     <div className="space-y-6">
-      {/* 電子契約の案内 */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-text">
-        <div className="font-bold mb-1">💡 電子契約なら印紙税は不要です</div>
-        <p className="text-xs text-text-muted leading-relaxed">
-          メール・クラウド署名（クラウドサイン、DocuSign 等）で作成した文書には印紙税はかかりません。
-          以下は<strong className="text-text">紙の文書</strong>の印紙税を判定するツールです。
-        </p>
-        <p className="text-xs text-text-muted mt-1">
-          出典: <a href="https://www.nta.go.jp/law/shitsugi/inshi/02/10.htm" target="_blank" rel="noopener noreferrer" className="underline text-primary-light">国税庁 質疑応答事例</a>
+      {/* 印紙税がかからないケース */}
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-text space-y-3">
+        <div className="font-bold">💡 印紙税がかからないケース</div>
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs font-bold text-text">■ 電子契約</div>
+            <p className="text-xs text-text-muted mt-0.5">
+              メール・クラウド署名（クラウドサイン、DocuSign 等）で作成した文書には印紙税はかかりません。
+            </p>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-text">■ 写し・コピー</div>
+            <p className="text-xs text-text-muted mt-0.5">
+              署名押印や「原本と相違ない」等の証明がなければ、写し・コピーに印紙税はかかりません。
+            </p>
+            <p className="text-xs text-warning/80 mt-0.5">
+              ※ 署名押印・原本証明がある場合は課税対象です
+            </p>
+          </div>
+        </div>
+        <p className="text-xs text-text-muted pt-1 border-t border-primary/10">
+          以下は<strong className="text-text">紙の原本</strong>の印紙税を判定するツールです。
+          出典: <a href="https://www.nta.go.jp/law/shitsugi/inshi/02/10.htm" target="_blank" rel="noopener noreferrer" className="underline text-primary-light">国税庁 質疑応答事例</a> / <a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/inshi/7120.htm" target="_blank" rel="noopener noreferrer" className="underline text-primary-light">No.7120</a>
         </p>
       </div>
 

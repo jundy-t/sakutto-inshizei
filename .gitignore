@@ -31,3 +31,10 @@ src/data/sources/
 *.njsproj
 *.sln
 *.sw?
+
+# Cloudflare Workers
+.wrangler/
+
+# QA / audit artifacts
+audit-screenshots/
+.playwright-mcp/

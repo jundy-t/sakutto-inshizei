@@ -59,6 +59,14 @@ export interface WizardAnswers {
   isBusinessActivity?: boolean;
   /** bill_of_exchange 選択時: 特例手形か */
   isSpecialBill?: boolean;
+  /** 変更契約書かどうか */
+  isAmendment?: boolean;
+  /** 変更前の契約書を特定できるか（isAmendment=true の場合） */
+  priorIdentifiable?: boolean;
+  /** 増額 or 減額（priorIdentifiable=true の場合） */
+  amendmentDirection?: 'increase' | 'decrease';
+  /** 増額分の金額（amendmentDirection='increase' の場合。円） */
+  amendmentAmount?: number;
 }
 
 // ============================================================
@@ -72,6 +80,30 @@ export interface TaxableResult {
   label: string;
   /** 軽減措置の対象か（第1号の1 不動産譲渡 / 第2号 建設工事請負） */
   isReduction: boolean;
+  /** 出典URL（国税庁タックスアンサー） */
+  source: string;
+  /** 複数号該当（通則3適用）の追加検討UI用。リスクが高い号にのみ付与される。 */
+  hybridOptions?: readonly HybridOption[];
+}
+
+/** 追加検討UIのチェック候補（data.ts の HybridOption を再エクスポート用型） */
+export interface HybridOption {
+  readonly id: string;
+  readonly label: string;
+  readonly linkedClass: string;
+  readonly helpText: string;
+}
+
+/** 通則3エンジンの結果 */
+export interface Rule3Result {
+  /** 最終的に所属する号 */
+  finalClass: string;
+  /** 当初号から変更されたか */
+  changed: boolean;
+  /** 適用されたルール（"通則3イ" / "通則3ロ" / "通則3ハ" / "通則3ニ" / 例外ラベル） */
+  appliedRule: string;
+  /** ユーザー向け説明文 */
+  explanation: string;
 }
 
 /** 不課税文書 */
@@ -88,6 +120,10 @@ export interface FixedResult {
   classNumber: string;
   label: string;
   fixedAmount: number;
+  /** 出典URL（国税庁タックスアンサー） */
+  source: string;
+  /** 複数号該当（通則3適用）の追加検討UI用。第7号のようなリスク号のみ付与される。 */
+  hybridOptions?: readonly HybridOption[];
 }
 
 export type ClassificationResult = TaxableResult | NonTaxableResult | FixedResult;
