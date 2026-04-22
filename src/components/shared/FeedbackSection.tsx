@@ -46,6 +46,10 @@ export function FeedbackSection({ context }: Props) {
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
       <h3 className="text-sm font-bold text-text">ご利用ありがとうございます</h3>
+      <p className="text-xs text-text-muted leading-relaxed">
+        ご意見・ご質問・判定結果に関するお問い合わせもこちらから承ります。<br />
+        返信を希望される場合はご連絡先(メールアドレス等)もご記入ください。
+      </p>
 
       <div className="space-y-2">
         <p className="text-sm text-text-muted">このツールは役に立ちましたか？</p>
@@ -68,14 +72,14 @@ export function FeedbackSection({ context }: Props) {
 
       <div className="space-y-2">
         <label htmlFor="feedback-text" className="text-sm text-text-muted">
-          ご意見・ご要望（任意）
+          ご意見・ご質問・お問い合わせ（任意）
         </label>
         <textarea
           id="feedback-text"
           rows={3}
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          placeholder="使いやすさ、追加してほしい機能など"
+          placeholder="使いやすさ、追加してほしい機能、判定結果の疑問点、お問い合わせ内容など"
           className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
         />
       </div>
