@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { PortalBanner } from './components/layout/PortalBanner';
 import { FeedbackSection } from './components/shared/FeedbackSection';
 import { SeoExpandableSections } from './components/sections/SeoExpandableSections';
 import { EntryScreen } from './components/EntryScreen';
@@ -103,6 +104,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-bg">
+      <PortalBanner />
       <Header onHomeClick={goHome} />
 
       <main className="flex-1">

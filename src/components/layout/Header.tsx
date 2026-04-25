@@ -16,7 +16,7 @@ export function Header({ onHomeClick }: HeaderProps) {
             サクッと印紙税
           </h1>
           <p className="text-sm text-text-muted mt-0.5 truncate">
-            契約書・領収書の印紙税額をウィザード形式で判定。第1号〜第20号全号対応、不動産軽減措置対応。 | 無料・登録不要
+            契約書・領収書・業務委託・不動産売買・請負契約などの印紙税を即判定 | 軽減措置・電子契約対応
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

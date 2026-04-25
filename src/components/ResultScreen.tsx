@@ -7,13 +7,14 @@
  *   通則3適用後の最終号・税額を再計算する
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ShareButton } from './shared/ShareButton';
 import { PrintButton } from './shared/PrintButton';
 import { calculateTax } from '../core/calculateTax';
 import { applyRule3 } from '../core/applyRule3';
 import { DOCUMENT_CLASSES } from '../data/sources/nta-inshizei/data';
 import { LAW_URLS } from '../data/sources/nta-inshizei/lawUrls';
+import { trackToolExecute } from '../lib/gtag';
 import type { ClassificationResult, TaxResult, WizardAnswers, HybridOption } from '../core/types';
 
 interface ResultScreenProps {
@@ -25,6 +26,10 @@ interface ResultScreenProps {
 }
 
 export function ResultScreen({ classification, taxResult, wizardAnswers, onBack, onRetry }: ResultScreenProps) {
+  useEffect(() => {
+    if (classification) trackToolExecute();
+  }, []);
+
   if (!classification) return null;
 
   // hybridOptions を持つ課税/定額結果のみ、追加検討UIを出す

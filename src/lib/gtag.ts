@@ -23,3 +23,7 @@ export function trackCtaClick(button: string) {
 export function trackFeedbackSubmit(rating: number) {
   trackEvent('feedback_submit', { rating });
 }
+
+export function trackToolExecute() {
+  trackEvent('tool_execute');
+}
